@@ -1,0 +1,322 @@
+/* ==========================================================================
+   AI Blind Spot Explorer - Leaflet Map Custom Styling & Markers (v6.0)
+   ========================================================================== */
+
+/* Leaflet Tile Container */
+.leaflet-container {
+  background-color: #f1f5f9 !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Custom Marker Styling */
+.custom-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.custom-pin:hover,
+.custom-pin:active {
+  transform: scale(1.2) translateY(-3px);
+  z-index: 9999 !important;
+}
+
+/* 1. Hotspot Marker (Pulsing Red) */
+.pin-hotspot {
+  width: 34px;
+  height: 34px;
+  position: relative;
+}
+
+.pin-hotspot-core {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.6), inset 0 0 3px rgba(255, 255, 255, 0.4);
+  border: 2px solid #ffffff;
+  position: relative;
+  z-index: 2;
+}
+
+.pin-hotspot-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.35);
+  animation: pulseHotspot 2s infinite ease-out;
+  z-index: 1;
+}
+
+@keyframes pulseHotspot {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
+/* 2. Blind Spot / Hidden Gem Marker (Glowing Emerald) */
+.pin-blind-gem {
+  width: 34px;
+  height: 34px;
+  position: relative;
+}
+
+.pin-blind-gem-core {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(5, 150, 105, 0.7), inset 0 0 3px rgba(255, 255, 255, 0.5);
+  border: 2px solid #ffffff;
+  position: relative;
+  z-index: 2;
+}
+
+.pin-blind-gem-core svg {
+  transform: rotate(-45deg);
+  color: #ffffff;
+}
+
+.pin-blind-gem-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(5, 150, 105, 0.3);
+  animation: pulseGem 2.2s infinite ease-out;
+  z-index: 1;
+}
+
+@keyframes pulseGem {
+  0% { transform: translate(-50%, -50%) rotate(45deg) scale(0.6); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(45deg) scale(1.6); opacity: 0; }
+}
+
+/* 3. Local Life Marker (Warm Amber / Heritage Purple) */
+.pin-local-life {
+  width: 32px;
+  height: 32px;
+  position: relative;
+}
+
+.pin-local-life-core {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed 0%, #d97706 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.5);
+  border: 2px solid #ffffff;
+  position: relative;
+  z-index: 2;
+}
+
+/* Leaflet Custom Popup Styling (Mobile Friendly) */
+.leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0 !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+  min-width: 220px;
+  max-width: 280px;
+}
+
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+
+.map-popup-card {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.map-popup-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+  text-transform: uppercase;
+}
+
+.map-popup-badge.hot { background: #fee2e2; color: #b91c1c; }
+.map-popup-badge.gem { background: #ecfdf5; color: #047857; }
+.map-popup-badge.life { background: #f5f3ff; color: #6d28d9; }
+
+.map-popup-title {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.map-popup-desc {
+  font-size: 0.7rem;
+  color: var(--text-body);
+}
+
+.map-popup-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.map-popup-btn {
+  flex: 1;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 6px 8px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.map-popup-btn.primary {
+  background: #059669;
+}
+
+/* User Location Pin & Radar Scan Animation */
+.user-location-pin {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-location-heading-cone {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform-origin: bottom center;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 22px solid rgba(37, 99, 235, 0.45);
+  pointer-events: none;
+  z-index: 1;
+  transition: transform 0.15s ease-out;
+}
+
+.user-location-core {
+  width: 16px;
+  height: 16px;
+  background: #2563eb;
+  border: 2.5px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(37, 99, 235, 0.8);
+  z-index: 3;
+  position: relative;
+}
+
+.user-location-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.35);
+  animation: userPulse 2s infinite ease-out;
+  z-index: 2;
+}
+
+@keyframes userPulse {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+}
+
+/* Check-in Celebration Pulse on Map Marker */
+.stamp-celebrate-pulse {
+  animation: stampPulse 1s ease-in-out 3;
+}
+
+@keyframes stampPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(16, 185, 129, 0)); }
+  50% { transform: scale(1.6) translateY(-8px); filter: drop-shadow(0 0 16px rgba(16, 185, 129, 0.9)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(16, 185, 129, 0)); }
+}
+
+/* In-App Walking Navigation Route Polyline */
+.navigation-route-line {
+
+  stroke: #059669;
+  stroke-width: 5;
+  stroke-dasharray: 8, 8;
+  animation: dashAnimation 1.5s linear infinite;
+}
+
+@keyframes dashAnimation {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+/* Radar Scan Circle Overlay */
+.radar-scan-circle {
+  stroke-dasharray: 6, 6;
+  animation: radarRotate 4s linear infinite;
+}
+
+@keyframes radarRotate {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 60; }
+}
+
+/* Zoom Control Placement */
+.leaflet-top.leaflet-right {
+  top: 64px !important;
+  right: 12px !important;
+}
+
+.leaflet-bar {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.leaflet-bar a {
+  background-color: var(--bg-surface-glass) !important;
+  color: var(--text-main) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+}

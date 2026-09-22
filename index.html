@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>AI 추천 사각지대 탐색기 & 모바일 길찾기 | 안국 · 서촌</title>
+  <meta name="description" content="스마트폰으로 골목길을 걸으며 AI 추천 핫플의 편향을 확인하고 숨겨진 92.2%의 로컬 사각지대를 찾아가는 모바일 공간 인터랙티브 지도 서비스">
+
+  <!-- Open Graph / SEO -->
+  <meta property="og:title" content="AI 추천 사각지대 탐색기 — 안국·서촌 모바일 길찾기">
+  <meta property="og:description" content="AI의 답을 읽는 방법을 바꾸다: 추천의 근거와 이 답이 지나친 골목을 나란히 보며 현장에서 찾아가는 스마트폰 지도">
+  <meta property="og:type" content="website">
+
+  <!-- PWA Manifest & App Icons -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Stylesheets (v8 Desktop Phone Mockup + Scaled Content) -->
+  <link rel="stylesheet" href="css/main.css?v=8">
+  <link rel="stylesheet" href="css/components.css?v=8">
+  <link rel="stylesheet" href="css/map.css?v=8">
+</head>
+<body>
+  <div id="app">
+    <!-- 1. Minimal Mobile-Ready Top Navigation Bar -->
+    <header class="top-nav">
+      <!-- Brand Section -->
+      <div class="brand-section">
+        <div class="brand-icon-wrapper">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </div>
+        <div class="brand-title-group">
+          <h1 id="nav-brand-title">
+            <span id="nav-brand-name">AI 사각지대</span>
+            <span class="badge-ver" id="nav-brand-sub">안국·서촌</span>
+          </h1>
+        </div>
+
+      </div>
+
+      <!-- Center Mode Capsule Switcher -->
+      <div class="mode-toggle-group">
+        <button class="mode-btn active" data-mode="explorer" id="btn-mode-explorer" title="여행자 탐색 모드">
+          🌿 여행자
+        </button>
+        <button class="mode-btn" data-mode="b2g_policy" id="btn-mode-policy" title="지자체 정책관 모드">
+          🏛️ 정책관
+        </button>
+      </div>
+
+      <!-- Right Controls: Red Zone Status, Region & Language Switcher -->
+      <div class="top-nav-right">
+        <!-- Real-time Bukchon Red Zone Clock Status Pill -->
+        <div id="redzone-status-pill" class="redzone-status-pill open" title="북촌 특별관리지역 관람시간 실시간 체크" onclick="window.MapManager.flyToRegion('anguk')">
+          <!-- Injected via app.js -->
+        </div>
+
+        <!-- Language Switcher Pill -->
+        <div class="lang-toggle-group">
+          <button class="lang-btn active" data-lang="ko" onclick="window.AppManager.setLanguage('ko')">KO</button>
+          <button class="lang-btn" data-lang="en" onclick="window.AppManager.setLanguage('en')">EN</button>
+          <button class="lang-btn" data-lang="ja" onclick="window.AppManager.setLanguage('ja')">JA</button>
+          <button class="lang-btn" data-lang="zh" onclick="window.AppManager.setLanguage('zh')">ZH</button>
+        </div>
+
+        <!-- Region Switcher -->
+        <div class="region-toggle-group">
+          <button class="region-btn active" data-region="all">전체</button>
+          <button class="region-btn" data-region="anguk">안국</button>
+          <button class="region-btn" data-region="seochon">서촌</button>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- 2. Main Workspace Layout -->
+    <main class="workspace-layout" id="workspace-layout">
+      <!-- Full-bleed Map Section -->
+      <section class="map-container-wrapper" aria-label="사각지대 인터랙티브 지도">
+        <div id="map"></div>
+
+        <!-- Floating Search & Scenario Island (Top Center/Left) -->
+        <div class="unified-search-island" id="search-island">
+          <form class="search-input-row" id="custom-query-form" onsubmit="if(window.AppManager){window.AppManager.handleCustomQuery(event)}; return false;">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="user-query-input" placeholder="AI 질문 또는 핫플 검색 (예: 런던베이글, 찻집)" autocomplete="off">
+            <button type="button" class="search-clear-btn" id="search-clear-btn" onclick="document.getElementById('user-query-input').value=''; this.style.display='none';" style="display: none;">✕</button>
+            <button type="submit" class="search-action-btn">분석</button>
+          </form>
+
+          <!-- Scenario Chips Row (Horizontally Scrollable) -->
+          <div class="island-scenarios-row" id="scenario-chips-container">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Mobile In-App Navigation HUD (Appears when route/navigation is active) -->
+        <div class="navigation-hud-card" id="navigation-hud" style="display: none;">
+          <div class="nav-hud-main">
+            <div class="nav-hud-left">
+              <div class="nav-hud-icon">🚶</div>
+              <div class="nav-hud-text">
+                <div class="nav-hud-target" id="nav-hud-target-name">목적지 길안내</div>
+                <div class="nav-hud-eta" id="nav-hud-eta-info">도보 3분 (210m) · 골목길 안내</div>
+              </div>
+            </div>
+            <button class="nav-hud-close" onclick="window.AppManager.stopNavigation()" title="길안내 종료">✕</button>
+          </div>
+          <div class="nav-hud-actions">
+            <a href="#" id="nav-btn-kakao" target="_blank" rel="noopener noreferrer" class="nav-action-btn kakao">
+              <span>📱 카카오맵 길찾기</span>
+            </a>
+            <a href="#" id="nav-btn-naver" target="_blank" rel="noopener noreferrer" class="nav-action-btn naver">
+              <span>🗺️ 네이버지도 길찾기</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Walking Course Info Banner (When active) -->
+        <div class="walking-course-card" id="walking-course-banner" style="display: none;">
+          <div class="course-header">
+            <div class="course-title">
+              <span class="course-badge">추천 산책로</span>
+              <strong>🌿 안국·서촌 고요의 골목길 (1.8km)</strong>
+            </div>
+            <button class="course-close" onclick="window.AppManager.toggleWalkingRoute()">✕</button>
+          </div>
+          <div class="course-metrics">
+            <div class="metric-box">
+              <span class="m-label">예상 대기</span>
+              <span class="m-val mint">0분 (대기 없음)</span>
+            </div>
+            <div class="metric-box">
+              <span class="m-label">소음도 저감</span>
+              <span class="m-val mint">▼ 72%</span>
+            </div>
+            <div class="metric-box">
+              <span class="m-label">분산 적합도</span>
+              <span class="m-val amber">100% 최적</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Floating Action Buttons (FAB Stack on bottom-right) -->
+        <div class="mobile-fab-stack" id="mobile-fab-stack">
+          <!-- 1. GPS Live Location Button -->
+          <button class="fab-btn" id="fab-gps" onclick="window.AppManager.toggleGpsLocation()" title="내 위치 GPS 추적">
+            <svg class="fab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="3"></circle>
+              <line x1="12" y1="2" x2="12" y2="5"></line>
+              <line x1="12" y1="19" x2="12" y2="22"></line>
+              <line x1="2" y1="12" x2="5" y2="12"></line>
+              <line x1="19" y1="12" x2="22" y2="12"></line>
+            </svg>
+            <span class="fab-label">내 위치</span>
+          </button>
+
+          <!-- 2. Walking Route Toggle Button -->
+          <button class="fab-btn" id="fab-walking-route" onclick="window.AppManager.toggleWalkingRoute()" title="고요의 산책로 보기">
+            <svg class="fab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M13 4v6m0 0l4 4m-4-4l-4 4m6 6v-6"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="fab-label">산책로</span>
+          </button>
+
+          <!-- 3. Nearby Radar Toggle Button -->
+          <button class="fab-btn" id="fab-radar" onclick="window.AppManager.toggleLocationRadar()" title="반경 300m 사각지대 레이더">
+            <svg class="fab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M2 12h20M12 2v20"></path>
+              <circle cx="12" cy="12" r="8"></circle>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span class="fab-label">레이더</span>
+          </button>
+        </div>
+
+        <!-- Category Filter Pill Bar (Bottom Left / Above Bottom Sheet) -->
+        <div class="map-bottom-controls" id="map-bottom-controls">
+          <div class="filter-pill-bar">
+            <button class="cat-filter-btn active" data-cat="all">전체</button>
+            <button class="cat-filter-btn" data-cat="베이커리/카페">☕ 카페</button>
+            <button class="cat-filter-btn" data-cat="전통">🏛️ 고택·다실</button>
+            <button class="cat-filter-btn" data-cat="서점/인문학">📚 서점</button>
+            <button class="cat-filter-btn" data-cat="생활유산">🧵 생활유산</button>
+          </div>
+        </div>
+
+        <!-- Place Quick Preview Modal Container -->
+        <div id="place-modal-container"></div>
+      </section>
+
+      <!-- Desktop Sidebar Toggle Floating Button (On desktop boundary) -->
+      <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="window.AppManager.toggleSidebar()" title="패널 접기/펼치기">
+        <svg id="sidebar-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+
+      <!-- 3. Mobile 3-Snap Bottom Sheet / Desktop Sidebar Panel -->
+      <aside class="sidebar-panel bottom-sheet-panel state-peek" id="sidebar-panel">
+        <!-- Mobile Bottom Sheet Drag Handle Bar -->
+        <div class="bottom-sheet-handle-zone" id="bottom-sheet-handle" title="끌어올려 상세 보기">
+          <div class="bottom-sheet-drag-pill"></div>
+        </div>
+
+        <!-- Peek State Header (Always visible in bottom sheet peek state) -->
+        <div class="bottom-sheet-peek-header" id="bottom-sheet-peek-header" onclick="window.AppManager.toggleBottomSheetSnap()">
+          <div class="peek-left">
+            <div class="peek-dot-pulse"></div>
+            <div class="peek-title-group">
+              <span class="peek-title" id="peek-title-text">🌿 AI 사각지대 골목 대조 탐색</span>
+              <span class="peek-subtitle" id="peek-subtitle-text">486개 실재 장소 중 AI 추천 사각지대 92.2%</span>
+            </div>
+          </div>
+          <div class="peek-right">
+            <span class="peek-badge" id="peek-action-badge">탭하여 열기 ▲</span>
+          </div>
+        </div>
+
+        <!-- Compact Top Meta Stats Card -->
+        <div class="sidebar-meta-card" id="sidebar-meta-container">
+          <!-- Injected via app.js -->
+        </div>
+
+        <div class="sidebar-header">
+          <div class="sidebar-title-row">
+            <h2>추천의 근거 & 지나친 골목</h2>
+            <span class="bias-meter-badge">편향도 8.7 / 10</span>
+          </div>
+          <p class="sidebar-desc">
+            AI 추천 핫플의 출처와 그 답이 지나친 사각지대 골목을 나란히 대조합니다.
+          </p>
+        </div>
+
+        <!-- View Tabs (Explorer Mode) -->
+        <div class="view-tabs" id="view-tabs-container">
+          <button class="tab-btn active" data-tab="dual_comparison" id="tab-btn-dual">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
+            </svg>
+            <span id="tab-label-dual">대조 피드</span>
+          </button>
+          <button class="tab-btn" data-tab="xai_report" id="tab-btn-xai">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span id="tab-label-xai">AI 편향 분석</span>
+          </button>
+          <button class="tab-btn" data-tab="archive_list" id="tab-btn-archive">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span id="tab-label-archive">골목 아카이브</span>
+          </button>
+          <button class="tab-btn" data-tab="stamp_tour" id="tab-btn-stamp">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 15l-2 5l-4 -2l-1 5l9 -4l9 4l-1 -5l-4 2l-2 -5z"></path>
+              <circle cx="12" cy="8" r="5"></circle>
+            </svg>
+            <span id="tab-label-stamp">🏅 스탬프</span>
+          </button>
+        </div>
+
+
+        <!-- Scrollable Dynamic Content -->
+        <div class="sidebar-body">
+          <div id="sidebar-dynamic-content">
+            <!-- Rendered via app.js -->
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Application Logic (v8) -->
+  <script src="js/data.js?v=8"></script>
+  <script src="js/charts.js?v=8"></script>
+  <script src="js/map.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
+</body>
+</html>
