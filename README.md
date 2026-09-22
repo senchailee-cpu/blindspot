@@ -1,8 +1,8 @@
 # 🌿 AI 추천 사각지대 아카이브 & 뷰어 (AI Blind Spot Explorer)
 > **안국·서촌편: 생성형 AI가 지나친 로컬 골목의 재발견 & 오버투어리즘 완화 솔루션**
 
-[![Vercel Deployment](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://github.com/realbrsitol/ai-blindspot-explorer)
-[![GitHub Repository](https://img.shields.io/badge/GitHub-realbrsitol%2Fai--blindspot--explorer-blue?logo=github)](https://github.com/realbrsitol/ai-blindspot-explorer)
+[![Vercel Deployment](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://github.com/senchailee-cpu/blindspot)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-senchailee--cpu%2Fblindspot-blue?logo=github)](https://github.com/senchailee-cpu/blindspot)
 [![Tech Stack](https://img.shields.io/badge/Vanilla%20JS%20%7C%20Leaflet%20%7C%20Chart.js-PWA-emerald)]()
 
 ---
@@ -60,8 +60,8 @@
 
 ```bash
 # 1. 저장소 클론
-git clone https://github.com/realbrsitol/ai-blindspot-explorer.git
-cd ai-blindspot-explorer
+git clone https://github.com/senchailee-cpu/blindspot.git
+cd blindspot
 
 # 2. 로컬 웹 서버 실행 (Python 예시)
 python3 -m http.server 8080
