@@ -1,15 +1,15 @@
-const CACHE_NAME = 'blindspot-cache-v8';
+const CACHE_NAME = 'blindspot-cache-v9';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './css/main.css?v=8',
-  './css/components.css?v=8',
-  './css/map.css?v=8',
-  './js/data.js?v=8',
-  './js/charts.js?v=8',
-  './js/map.js?v=8',
-  './js/app.js?v=8'
+  './css/main.css?v=9',
+  './css/components.css?v=9',
+  './css/map.css?v=9',
+  './js/data.js?v=9',
+  './js/charts.js?v=9',
+  './js/map.js?v=9',
+  './js/app.js?v=9'
 ];
 
 self.addEventListener('install', (event) => {

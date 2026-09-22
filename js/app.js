@@ -250,21 +250,24 @@ function renderScenarioChips() {
     <button class="island-chip ${scenario.id === AppState.currentScenarioId ? 'active' : ''}" 
             data-scenario-id="${scenario.id}"
             onclick="window.AppManager.selectScenario('${scenario.id}')">
-      ${scenario.chipLabel}
+      ${scenario.badge || scenario.title || '추천 질의'}
     </button>
   `).join('');
 }
 
 function selectScenario(scenarioId) {
-  AppState.currentScenarioId = scenarioId;
+  let scenario = BLIND_SPOT_DATA.scenarios.find(s => s.id === scenarioId);
+  if (!scenario) {
+    scenario = BLIND_SPOT_DATA.scenarios[0];
+  }
+  if (!scenario) return;
+
+  AppState.currentScenarioId = scenario.id;
   AppState.auditedHotspot = null;
 
   document.querySelectorAll('.island-chip').forEach(chip => {
-    chip.classList.toggle('active', chip.dataset.scenarioId === scenarioId);
+    chip.classList.toggle('active', chip.dataset.scenarioId === scenario.id);
   });
-
-  const scenario = BLIND_SPOT_DATA.scenarios.find(s => s.id === scenarioId);
-  if (!scenario) return;
 
   const queryInput = document.getElementById('user-query-input');
   if (queryInput) {
@@ -280,8 +283,8 @@ function selectScenario(scenarioId) {
 function updatePeekHeaderForScenario(scenario) {
   const titleEl = document.getElementById('peek-title-text');
   const subtitleEl = document.getElementById('peek-subtitle-text');
-  if (titleEl && subtitleEl) {
-    titleEl.innerText = `🌿 ${scenario.name}`;
+  if (titleEl && subtitleEl && scenario) {
+    titleEl.innerText = `🌿 ${scenario.title || scenario.badge || 'AI 사각지대 골목 대조'}`;
     subtitleEl.innerText = `AI 질의: "${scenario.query}"`;
   }
 }
@@ -614,7 +617,36 @@ function renderCurrentTabContent() {
  * Side-by-Side 대조 피드 렌더링 (핫플 실시간 감사 배너 지원)
  */
 function renderDualComparisonView(container, scenario) {
-  let pairs = scenario.comparisons || [];
+  let pairs = [];
+  const places = BLIND_SPOT_DATA.places || [];
+
+  if (scenario && scenario.recommendedPlaces && scenario.recommendedPlaces.length > 0) {
+    scenario.recommendedPlaces.forEach((hotId, idx) => {
+      const hot = places.find(p => p.id === hotId);
+      if (!hot) return;
+      let gem = places.find(p => p.id === hot.counterpartId);
+      if (!gem && scenario.alternativePlaces && scenario.alternativePlaces[idx]) {
+        gem = places.find(p => p.id === scenario.alternativePlaces[idx]);
+      }
+      if (!gem) {
+        gem = places.find(p => p.type === 'blind_gem' && p.region === hot.region);
+      }
+      if (hot && gem) {
+        pairs.push({ hot, gem });
+      }
+    });
+  }
+
+  // Fallback: If no scenario-specific pairs, pair all hotspots with their counterpart gems
+  if (pairs.length === 0) {
+    const hotspots = places.filter(p => p.type === 'hotspot');
+    hotspots.forEach(hot => {
+      const gem = places.find(p => p.id === hot.counterpartId) || places.find(p => p.type === 'blind_gem' && p.region === hot.region);
+      if (hot && gem) {
+        pairs.push({ hot, gem });
+      }
+    });
+  }
 
   if (AppState.currentRegion !== 'all') {
     pairs = pairs.filter(p => p.hot.region === AppState.currentRegion || p.gem.region === AppState.currentRegion);
@@ -1109,19 +1141,27 @@ function handleCustomQuery(event) {
       return;
     }
 
-    // 2. Check if user query matches scenario keywords (e.g. "차", "찻집", "비", "서점", "장인", "공방")
-    if (query.includes('차') || query.includes('다실') || query.includes('조용')) {
-      selectScenario('tea_house');
+    // 2. Check if user query matches scenario keywords
+    if (query.includes('조용') || query.includes('혼자') || query.includes('사색') || query.includes('책') || query.includes('북카페') || query.includes('독서')) {
+      selectScenario('quiet_solo');
       setBottomSheetState('state-half');
       return;
-    } else if (query.includes('비') || query.includes('서점') || query.includes('책')) {
-      selectScenario('rainy_bookstore');
+    } else if (query.includes('비') || query.includes('운치') || query.includes('날씨')) {
+      selectScenario('rainy_day');
       setBottomSheetState('state-half');
       return;
-    } else if (query.includes('장인') || query.includes('공방') || query.includes('유산') || query.includes('전통')) {
-      selectScenario('craftsman');
+    } else if (query.includes('장인') || query.includes('공방') || query.includes('유산') || query.includes('전통') || query.includes('공예')) {
+      selectScenario('local_artisan');
       setBottomSheetState('state-half');
       return;
+    } else if (query.includes('차') || query.includes('다실') || query.includes('혜원')) {
+      const gem = BLIND_SPOT_DATA.places.find(p => p.id === 'gem_anguk_4' || p.name.includes('혜원') || p.category.includes('다실'));
+      if (gem) {
+        MapManager.focusPlace(gem.id);
+        openPlaceDetail(gem.id);
+        setBottomSheetState('state-half');
+        return;
+      }
     }
 
     // 3. Check if user query matches any hidden gem or local place name
@@ -1136,7 +1176,6 @@ function handleCustomQuery(event) {
       setBottomSheetState('state-half');
     } else {
       console.log('[handleCustomQuery] No match, fallback to general');
-      // Default fallback to first scenario
       selectScenario('general');
       setBottomSheetState('state-half');
     }
