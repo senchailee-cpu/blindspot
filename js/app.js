@@ -81,6 +81,7 @@ function initApp() {
   try { renderSidebarMetaStats(); } catch(e) { console.error('Meta stats error:', e); }
   try { renderRedZoneStatusPill(); } catch(e) { console.error('Red zone error:', e); }
   try { applyLanguage(AppState.currentLang); } catch(e) { console.error('Lang error:', e); }
+  try { if (window.AuthManager) window.AuthManager.init(); } catch(e) { console.error('Auth error:', e); }
 
   // 5. Initialize Leaflet Map
   try { MapManager.initMap('map'); } catch(e) { console.error('Map init error:', e); }
@@ -183,6 +184,10 @@ function applyLanguage(lang) {
   if (tabXai && dict.tabXai) tabXai.innerText = dict.tabXai;
   if (tabArchive && dict.tabArchive) tabArchive.innerText = dict.tabArchive;
   if (tabStamp && dict.tabStamp) tabStamp.innerText = `🏅 ${dict.tabStamp}`;
+
+  if (window.AuthManager) {
+    try { window.AuthManager.renderUI(); } catch(e) {}
+  }
 }
 
 /**
